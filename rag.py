@@ -13,19 +13,22 @@ SHOW_CONTEXT = "--show-context" in sys.argv
 
 
 # 1. Models: one turns text into vectors, the other answers questions.
+def ollama(path, payload):
+    r = requests.post(f"{OLLAMA}{path}", json=payload)
+    if not r.ok:  # surface Ollama's own message, e.g. "model '...' not found"
+        sys.exit(f"Ollama {path} failed ({r.status_code}): {r.text.strip()}")
+    return r.json()
+
+
 def embed(texts):
-    r = requests.post(f"{OLLAMA}/api/embed", json={"model": EMBED_MODEL, "input": texts})
-    r.raise_for_status()
-    return np.array(r.json()["embeddings"])
+    return np.array(ollama("/api/embed", {"model": EMBED_MODEL, "input": texts})["embeddings"])
 
 
 def ask_llm(prompt):
-    r = requests.post(f"{OLLAMA}/api/chat", json={
+    return ollama("/api/chat", {
         "model": CHAT_MODEL, "stream": False,
         "messages": [{"role": "user", "content": prompt}],
-    })
-    r.raise_for_status()
-    return r.json()["message"]["content"]
+    })["message"]["content"]
 
 
 # 2. Chunking: every non-empty paragraph of every docs/*.md file is one chunk.

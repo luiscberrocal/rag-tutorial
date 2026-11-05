@@ -10,11 +10,12 @@ services:
     volumes:
       - ollama-models:/root/.ollama   # models survive container restarts
     healthcheck:
-      test: ["CMD", "ollama", "list"]
+      # Healthy only after the entrypoint has pulled every model (it creates this file last)
+      test: ["CMD", "test", "-f", "/tmp/ollama-ready"]
       interval: 10s
       timeout: 5s
-      retries: 30
-      start_period: 10s
+      retries: 3
+      start_period: 30m   # first start downloads several GB; failures here don't count
     restart: unless-stopped
     # Uncomment to use an NVIDIA GPU (requires nvidia-container-toolkit):
     # deploy:

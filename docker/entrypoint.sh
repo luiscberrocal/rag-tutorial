@@ -3,6 +3,10 @@
 # then keep the server in the foreground.
 set -e
 
+# The healthcheck passes only once this file exists, i.e. after every model is pulled.
+READY_FILE=/tmp/ollama-ready
+rm -f "$READY_FILE"
+
 ollama serve &
 SERVER_PID=$!
 
@@ -21,5 +25,6 @@ for model in $OLLAMA_MODELS_TO_PULL; do
   fi
 done
 
+touch "$READY_FILE"
 echo "Ollama is ready"
 wait "$SERVER_PID"
