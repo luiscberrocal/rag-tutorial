@@ -15,7 +15,7 @@ Based on this video tutorial: https://youtu.be/f9uAG3AQGWM
 ## Setup
 
 Ollama runs in Docker (`Dockerfile` + `compose.yaml`). On first start the container pulls
-`nomic-embed-text` and `qwen3:4b-instruct` into the `ollama-models` volume, so later starts are fast.
+`nomic-embed-text:v1.5` and `qwen3:4b-instruct-2507-q4_K_M` into the `ollama-models` volume, so later starts are fast.
 
 ```bash
 docker compose -f compose.yaml up -d --build   # start Ollama on localhost:11434
@@ -24,7 +24,7 @@ uv sync
 ```
 
 To pull a different chat model, set `OLLAMA_MODELS_TO_PULL` before starting, e.g.
-`OLLAMA_MODELS_TO_PULL="nomic-embed-text llama3.2" docker compose -f compose.yaml up -d`.
+`OLLAMA_MODELS_TO_PULL="nomic-embed-text:v1.5 llama3.2" docker compose -f compose.yaml up -d`.
 For an NVIDIA GPU, uncomment the `deploy` block in `compose.yaml`.
 
 Stop it with `docker compose -f compose.yaml down` (add `-v` to delete the downloaded models).

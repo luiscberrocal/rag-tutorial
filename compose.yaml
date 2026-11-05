@@ -5,8 +5,8 @@ services:
     ports:
       - "11434:11434"
     environment:
-      # Override to pull a different chat model, e.g. "nomic-embed-text llama3.2"
-      OLLAMA_MODELS_TO_PULL: "${OLLAMA_MODELS_TO_PULL:-nomic-embed-text qwen3:4b-instruct}"
+      # Override to pull a different chat model, e.g. "nomic-embed-text:v1.5 llama3.2"
+      OLLAMA_MODELS_TO_PULL: "${OLLAMA_MODELS_TO_PULL:-nomic-embed-text:v1.5 qwen3:4b-instruct-2507-q4_K_M}"
     volumes:
       - ollama-models:/root/.ollama   # models survive container restarts
     healthcheck:

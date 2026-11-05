@@ -7,8 +7,8 @@ import numpy as np
 import requests
 
 OLLAMA = os.getenv("OLLAMA_URL", "http://localhost:11434")
-EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
-CHAT_MODEL = os.getenv("CHAT_MODEL", "qwen3:4b-instruct")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text:v1.5")
+CHAT_MODEL = os.getenv("CHAT_MODEL", "qwen3:4b-instruct-2507-q4_K_M")
 SHOW_CONTEXT = "--show-context" in sys.argv
 
 
