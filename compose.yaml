@@ -1,0 +1,29 @@
+services:
+  ollama:
+    build: .
+    container_name: rag-ollama
+    ports:
+      - "11434:11434"
+    environment:
+      # Override to pull a different chat model, e.g. "nomic-embed-text llama3.2"
+      OLLAMA_MODELS_TO_PULL: "${OLLAMA_MODELS_TO_PULL:-nomic-embed-text qwen3:4b-instruct}"
+    volumes:
+      - ollama-models:/root/.ollama   # models survive container restarts
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+    # Uncomment to use an NVIDIA GPU (requires nvidia-container-toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama-models:
