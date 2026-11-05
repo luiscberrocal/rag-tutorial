@@ -14,27 +14,31 @@ Based on this video tutorial: https://youtu.be/f9uAG3AQGWM
 
 ## Setup
 
+Common tasks are recipes in the `justfile` ([just](https://just.systems)); run `just` to list them.
+The equivalent raw commands are shown in comments.
+
 Ollama runs in Docker (`Dockerfile` + `compose.yaml`). On first start the container pulls
 `nomic-embed-text:v1.5` and `qwen3:4b-instruct-2507-q4_K_M` into the `ollama-models` volume, so later starts are fast.
 
 ```bash
-docker compose -f compose.yaml up -d --build   # start Ollama on localhost:11434
-docker compose -f compose.yaml logs -f ollama  # watch the model pull; wait for "Ollama is ready"
-uv sync
+just up        # docker compose -f compose.yaml up -d --build  (Ollama on localhost:11434)
+just logs      # docker compose -f compose.yaml logs -f        (wait for "Ollama is ready")
+just install   # uv sync
 ```
 
 To pull a different chat model, set `OLLAMA_MODELS_TO_PULL` before starting, e.g.
-`OLLAMA_MODELS_TO_PULL="nomic-embed-text:v1.5 llama3.2" docker compose -f compose.yaml up -d`.
+`OLLAMA_MODELS_TO_PULL="nomic-embed-text:v1.5 llama3.2" just up`.
 For an NVIDIA GPU, uncomment the `deploy` block in `compose.yaml`.
 
-Stop it with `docker compose -f compose.yaml down` (add `-v` to delete the downloaded models).
+Stop it with `just down`. `just prune` also deletes the downloaded models (`down -v`).
+`just shell` opens a shell in the Ollama container.
 
 ## Run
 
 ```bash
-uv run rag.py                       # interactive Q&A over docs/
-uv run rag.py --show-context        # also print the retrieved chunks
-CHAT_MODEL=llama3.2 uv run rag.py   # use a different chat model
+just run                       # uv run rag.py — interactive Q&A over docs/
+just run-context               # uv run rag.py --show-context — also print the retrieved chunks
+CHAT_MODEL=llama3.2 just run   # use a different chat model (pull it first, see Setup)
 ```
 
 Try: "What's the alarm code?", "Can I bring my dog inside?", "Is the cafe open on Christmas?"
