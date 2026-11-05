@@ -1,16 +1,24 @@
 # RAG from scratch
 
 A minimal retrieval-augmented generation (RAG) prototype in plain Python. It doesn't use
-LangChain or a vector database. It runs entirely on local models through [Ollama](https://ollama.com).
+LangChain. Vectors are stored in a single SQLite file with [sqlite-vec](https://github.com/asg017/sqlite-vec),
+and everything runs on local models through [Ollama](https://ollama.com).
 Based on this video tutorial: https://youtu.be/f9uAG3AQGWM
 
-## How it works (`rag.py`)
+## How it works
 
-1. **Models**: `nomic-embed-text` turns text into vectors, and a chat model writes the answers.
-2. **Chunking**: every paragraph of every `docs/*.md` file becomes one chunk.
-3. **Embedding**: all chunks are embedded in one batch call to `/api/embed`.
-4. **Retrieval**: the question is embedded, and the top-k chunks are picked by cosine similarity (numpy).
-5. **Generation**: the retrieved chunks and the question go into one prompt sent to `/api/chat`.
+1. **Models** (`rag.py`): `nomic-embed-text` turns text into vectors, and a chat model writes the answers.
+2. **Chunking** (`chunker.py`): every `.md` file under `DOCS_DIR` (recursively, skipping hidden folders) is split
+   into one chunk per H1–H3 section. Code blocks are kept whole; one longer than the limit is split into separately fenced pieces. YAML frontmatter is removed from the text
+   and kept as metadata. Sections longer than 2,000 characters are split on paragraph, table, and code-block
+   boundaries, and large tables repeat their header row in every piece. Each chunk starts with its source path and
+   heading trail, e.g. `handbook.md > Byte Bistro Employee Handbook > Alarm code`.
+3. **Embedding** (`index.py`): chunks are embedded in batches of 64 and stored in `.rag_index/<folder>-<hash>.db`.
+   On each start, only files whose content changed are re-embedded, and deleted files are removed from the index.
+   Changing `EMBED_MODEL` or the chunking settings rebuilds the whole index automatically.
+4. **Retrieval**: the question is embedded, and sqlite-vec returns the top-k chunks by cosine distance.
+5. **Generation**: the retrieved chunks and the question go into one prompt sent to `/api/chat`, which is asked
+   to cite the source files it used.
 
 ## Setup
 
@@ -43,6 +51,18 @@ CHAT_MODEL=llama3.2 just run   # use a different chat model (pull it first, see 
 
 Try: "What's the alarm code?", "Can I bring my dog inside?", "Is the cafe open on Christmas?"
 
-To use your own data, drop more `.md` files into `docs/`. Paragraphs are separated by blank lines.
+To use your own data, drop more `.md` files into `docs/`, or point `DOCS_DIR` at another folder:
 
-Environment variables: `OLLAMA_URL` (default `http://localhost:11434`), `EMBED_MODEL`, `CHAT_MODEL`.
+```bash
+DOCS_DIR=~/_payoy/tools/money-documentation just run   # first run embeds every file; later runs only changed ones
+just index                                             # sync the index and exit, without starting the Q&A
+just reindex                                           # rebuild the whole index from scratch
+just clean-index                                       # delete all saved indexes
+```
+
+Each docs folder gets its own index file, so switching `DOCS_DIR` doesn't trigger a rebuild. The first full
+index of `money-documentation` (109 files, 1,690 chunks) took about 5.5 minutes on CPU. A run with no changes
+starts in under a second.
+
+Environment variables: `OLLAMA_URL` (default `http://localhost:11434`), `EMBED_MODEL`, `CHAT_MODEL`,
+`DOCS_DIR` (default `docs`), `INDEX_DB` (overrides the index file path), `TOP_K` (chunks per answer, default 3).

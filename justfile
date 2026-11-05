@@ -46,6 +46,18 @@ run *args:
 run-context:
     @uv run rag.py --show-context
 
+# Sync the index (re-embeds only changed files) and exit; set DOCS_DIR to index another folder
+index:
+    @uv run rag.py --index-only
+
+# Rebuild the whole index from scratch, then exit
+reindex:
+    @uv run rag.py --index-only --reindex
+
+# Delete every saved index in .rag_index/ (each docs folder is fully re-embedded on its next run)
+clean-index:
+    @rm -rf .rag_index
+
 # Remove Python cache artifacts
 clean:
     @find . -name __pycache__ -type d -not -path './.venv/*' -prune -exec rm -rf {} +
